@@ -83,11 +83,14 @@ class FormView(GenericView):
         return self.form_invalid(form)
 
     def form_valid(self, form):
-        if self.success_url is None:
-            msg = "'%s' must define 'success_url' or override 'form_valid()'"
-            raise ImproperlyConfigured(msg % self.__class__.__name__)
-        return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
+
+    def get_success_url(self):
+        if self.success_url is None:
+            msg = "'%s' must define 'success_url' or override 'form_valid()'"
+            raise ImproperlyConfigured(msg % self.__class__.__name__)
+        return self.success_url

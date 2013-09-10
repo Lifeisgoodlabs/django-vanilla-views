@@ -121,7 +121,8 @@ class GenericModelView(View):
         Returns a form instance.
         """
         cls = self.get_form_class()
-        return cls(data=data, files=files, instance=instance)
+        kwargs = self.get_form_kwargs()
+        return cls(data=data, files=files, instance=instance, **kwargs)
 
     # Pagination methods
 
@@ -199,6 +200,15 @@ class GenericModelView(View):
             context=context
         )
 
+    # Compat
+
+    @property
+    def slug_url_kwarg(self):
+        return self.lookup_url_kwarg or self.lookup_field
+
+    def get_form_kwargs(self):
+        return {}
+
 
 ## The concrete model views
 
@@ -260,18 +270,20 @@ class CreateView(GenericModelView):
 
     def form_valid(self, form):
         self.object = form.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
+    def get_success_url(self):
         try:
-            url = self.success_url or self.object.get_absolute_url()
+            return self.success_url or self.object.get_absolute_url()
         except AttributeError:
             msg = "No URL to redirect to.  '%s' must provide 'success_url', " \
                 "define a 'get_absolute_url()' method on the model class, " \
                 "or override 'form_valid()'"
             raise ImproperlyConfigured(msg % self.__class__.__name__)
-        return HttpResponseRedirect(url)
-
-    def form_invalid(self, form):
-        context = self.get_context_data(form=form)
-        return self.render_to_response(context)
 
 
 class UpdateView(GenericModelView):
@@ -293,17 +305,20 @@ class UpdateView(GenericModelView):
 
     def form_valid(self, form):
         self.object = form.save()
-        try:
-            url = self.success_url or self.object.get_absolute_url()
-        except AttributeError:
-            msg = "No URL to redirect to. '%s' must provide 'success_url' " \
-                "or define a 'get_absolute_url()' method on the Model."
-            raise ImproperlyConfigured(msg % self.__class__.__name__)
-        return HttpResponseRedirect(url)
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
+
+    def get_success_url(self):
+        try:
+            return self.success_url or self.object.get_absolute_url()
+        except AttributeError:
+            msg = "No URL to redirect to.  '%s' must provide 'success_url', " \
+                "define a 'get_absolute_url()' method on the model class, " \
+                "or override 'form_valid()'"
+            raise ImproperlyConfigured(msg % self.__class__.__name__)
 
 
 class DeleteView(GenericModelView):
@@ -318,7 +333,10 @@ class DeleteView(GenericModelView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
         if self.success_url is None:
             msg = "No URL to redirect to. '%s' must define 'success_url'"
             raise ImproperlyConfigured(msg % self.__class__.__name__)
-        return HttpResponseRedirect(self.success_url)
+        return self.success_url
