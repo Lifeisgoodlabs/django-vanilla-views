@@ -62,7 +62,7 @@ class GenericView(View):
             context=context
         )
 
-    def get_form_kwarg(self):
+    def get_form_kwargs(self):
         return {}
 
 
