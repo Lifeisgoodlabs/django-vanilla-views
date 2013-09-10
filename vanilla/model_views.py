@@ -202,12 +202,10 @@ class GenericModelView(View):
 
     # Compat
 
-    @property
-    def slug_url_kwarg(self):
-        return self.lookup_url_kwarg or self.lookup_field
-
     def get_form_kwargs(self):
         return {}
+
+    slug_url_kwarg = 'slug'
 
 
 ## The concrete model views
