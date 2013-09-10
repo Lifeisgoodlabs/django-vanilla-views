@@ -41,7 +41,7 @@ class GenericView(View):
         """
         cls = self.get_form_class()
         kwargs = self.get_form_kwargs()
-        return cls(data=data, files=files)
+        return cls(data=data, files=files, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
