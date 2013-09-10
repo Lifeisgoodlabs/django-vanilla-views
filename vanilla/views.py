@@ -40,6 +40,7 @@ class GenericView(View):
         Given `data` and `files` QueryDicts, returns a form.
         """
         cls = self.get_form_class()
+        kwargs = self.get_form_kwargs()
         return cls(data=data, files=files)
 
     def get_context_data(self, **kwargs):
@@ -60,6 +61,9 @@ class GenericView(View):
             template=self.get_template_names(),
             context=context
         )
+
+    def get_form_kwarg(self):
+        return {}
 
 
 class TemplateView(GenericView):
